@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 
-const allowedOrigins = ['http://127.0.0.1:5500/', 'https://ojaarv-api.onrender.com/'];
+const allowedOrigins = ['http://localhost:3000/', 'https://ojaarv-api.onrender.com/'];
 app.use(cors({
     origin: allowedOrigins
 }));
