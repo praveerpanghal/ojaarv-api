@@ -9,8 +9,12 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     next();
 });
-app.get('/contact', (req, res) => {
-    res.send('Hello, Express Ojaarv!');
+app.get('/api/contact', (req, res) => {
+    const user = {
+        fname: 'John',
+        lname: 'Doe'
+    };
+    res.json(user);
 });
 
 
