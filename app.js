@@ -2,13 +2,11 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer');
-const Excel = require('exceljs');
+const userService = require('./userService'); 
 
 
 const PORT = process.env.PORT || 3000;
 // Middleware
-
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -20,68 +18,56 @@ app.use((req, res, next) => {
     next();
 });
 
-// POST API to add user data to Excel sheet
+// POST API to add user data to the database
 app.post('/api/register', (req, res) => {
-    const { name, email, password } = req.body;
-  
-    const workbook = new Excel.Workbook();
-    let sheet;
-  
-    // Check if the Excel file exists
-    workbook.xlsx.readFile('users.xlsx')
-      .then(() => {
-        sheet = workbook.getWorksheet('Users');
-      })
-      .catch(() => {
-        // If the file doesn't exist, create a new sheet with header
-        sheet = workbook.addWorksheet('Users');
-        sheet.addRow(['Name', 'Email', 'Password']); // Add header row
-      })
-      .then(() => {
-        sheet.addRow([name, email, password]); // Add user data
-  
-        // Save the workbook to the file
-        return workbook.xlsx.writeFile('users.xlsx');
-      })
-      .then(() => {
-        console.log('User data added to Excel sheet');
-        res.status(200).json({ message: 'User registered successfully' });
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-        res.status(500).json({ message: 'Registration failed' });
-      });
-  });
-  // GET API to read data from Excel sheet
-app.get('/api/users', (req, res) => {
-   // console.log('Users data req:', req);
-    const workbook = new Excel.Workbook();
-    workbook.xlsx.readFile('users.xlsx')
-      .then(() => {
-        const sheet = workbook.getWorksheet('Users');
-        const usersData = [];
-  
-        sheet.eachRow((row, rowNumber) => {
-            console.log("Inside Sheet- rowNumber", rowNumber);
-          if (rowNumber !== 1) { // Skip header row
-            const userData = {
-              name: row.getCell(1).value,
-              email: row.getCell(2).value,
-              password: row.getCell(3).value,
-            };
-            usersData.push(userData);
-          }
-        });
-        console.log('Users data:', usersData);
-        res.status(200).json(usersData);
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-        res.status(500).json({ message: 'Error reading Excel sheet' });
-      });
-  });
-  
+    const userData = req.body;
 
+    userService.registerUser(userData, (err, result) => {
+        if (err) {
+            res.status(500).json({ message: 'Registration failed' });
+        } else {
+            res.status(200).json(result);
+        }
+    });
+});
+
+// GET API to read data from the database
+app.get('/api/users', (req, res) => {
+    userService.getUsers((err, data) => {
+        if (err) {
+            res.status(500).json({ message: 'Error reading user data' });
+        } else {
+            res.status(200).json(data);
+        }
+    });
+});
+
+// PUT API to update user data in the database
+app.put('/api/update/:id', (req, res) => {
+    const { id } = req.params;
+    const userData = req.body;
+
+    userService.updateUser(id, userData, (err, result) => {
+        if (err) {
+            res.status(500).json({ message: 'Update failed' });
+        } else {
+            res.status(200).json(result);
+        }
+    });
+});
+
+// DELETE API to delete user data from the database
+app.delete('/api/delete/:id', (req, res) => {
+    const { id } = req.params;
+
+    userService.deleteUser(id, (err, result) => {
+        if (err) {
+            res.status(500).json({ message: 'Delete failed' });
+        } else {
+            res.status(200).json(result);
+        }
+    });
+});
 
 
 app.listen(PORT, () => {
